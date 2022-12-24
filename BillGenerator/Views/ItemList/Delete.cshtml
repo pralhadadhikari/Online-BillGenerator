@@ -1,0 +1,32 @@
+﻿@model Item
+
+<form method="post" asp-action="Delete">
+    <table>
+        <tr>
+            <td>
+                <label asp-for="Name"></label>
+            </td>
+            <td>
+                <input asp-for="Name" class="form-control" readonly="@(true)" />
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label asp-for="Price"></label>
+            </td>
+            <td>
+                <input asp-for="Price" class="form-control" readonly="@(true)" />
+                
+            </td>
+        </tr>
+        <tr>
+            
+            <td>
+                <button type="submit">Delete</button>
+                <a asp-controller="ItemList" asp-action="ItemList">Back to list</a>
+            </td>
+        </tr>
+    </table>
+
+</form>
