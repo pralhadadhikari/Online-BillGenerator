@@ -114,7 +114,7 @@
 
             </div>
         </div>
-
+        
     </div>
 
 
@@ -161,9 +161,53 @@
     </table>
 </div>
     </div>
+    <div>
+        <input data-toggle="modal" data-target="#paymentmodal" style="float:right" type='button' value='Pay' name='pay' class='btn btn-primary' id="payamount" />
+    </div>
+    </div>
+
+<div id="paymentmodal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment</h5>
+                <button type="button" class="close" data-dismiss="modal" id="btnclose" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            Payment Total:
+                            <input type="text" id="txtPaymentTotal" readonly="readonly" class="form-control" value="0" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            Payment Amount:
+                            <input type="text" id="txtPaymentAmount" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            Return Amount:
+                            <input type="text" id="txtReturn" class="form-control" value="0" />
+                        </div>
+                        <div class="form-group col-md-6">
+                             Balance Amount:
+                            <input type="text" id="txtBalance" readonly="readonly" class="form-control" value="0" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnsave">Save changes </button>
+                <button type="button" class="btn btn-secondary" id="btnclosefrm">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 @section scripts{
-
+@*
 
         <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="~/lib/jquery/dist/jquery.js"></script>
@@ -171,7 +215,162 @@
     @{
             <partial name="_ValidationScriptsPartial" />
     }
-    
+    *@
 
+    <script type="text/javascript">
+                var dtable;
+        $(document).ready(function () {
+             $("#ItemId").val(0);
+            $("#ItemId").change(function () {
+                var itemId = $("#ItemId").val();
+                itemPrice(itemId);
+            });
+            $('#btnsave').click(function () {
+               
+
+                $('#paymentmodal').modal('hide');
+            });
+
+            $('#btnclose').click(function () {
+                $('#paymentmodal').modal('hide');
+            });
+            $('#btnclosefrm').click(function () {
+                $('#paymentmodal').modal('hide');
+            });
+
+            $('#payamount').click(function () {
+                $('#paymentmodal').modal('show');
+            });
+
+            $("input").change(function () {
+                total();
+            });
+
+            $("input").keyup(function () {
+                calculatebalance();
+            });
+
+            $("#AddToList").click(function () {
+                addItemToList();
+            });
+
+            $("#AddToList").click(function () {
+                GrandTotal();
+            });
+
+            $("#RemoveItem").click(function () {
+                alert(itemId);
+            });
+            //var itemId = $("#Item").val();
+        });
+
+        function itemPrice(itemId) {
+
+                    $.ajax({
+
+                        url: "/Home/getUnitPrice",
+                        datatype: "Json",
+                        //data: { Id: $('#ItemId').val() },
+                        data: { Id:itemId},
+                        success: function (data) {
+                            $('#Price').val(data);
+
+                        }
+                    });
+                
+        }
+
+
+
+            function total() {
+                var UnitPrice = $("#Price").val();
+                var Quantity = $("#Quantity").val();
+                var Discount = $("#Discount").val();
+                var amount = parseInt(UnitPrice) * parseInt(Quantity);
+                Total = (amount - (amount * (parseInt(Discount)) * .01));
+                $("#Total").val(Total);
+            };
+
+            function addItemToList() {
+
+                var tblItem = $("#myTable");
+                var ItemId = $("#ItemId").val();
+                var UnitPrice = $("#Price").val();
+                var Quantity = $("#Quantity").val();
+                var Discount = $("#Discount").val();
+
+                //var Snum = $("#myTable tbody").children().length + 1;
+                var ItemName = $("#ItemId option:selected").text();
+                //var ItemIdd = $("#ItemId option:selected").val();
+                var Amount = UnitPrice * Quantity;
+                var Total = (Amount - (Amount * Discount) * .01)
+
+                var ItemList = "<tr><td>"
+                    + ItemId +
+                    "</td><td>"
+                    + ItemName +
+                    "</td><td>"
+                    + UnitPrice +
+                    "</td><td>"
+                    + Quantity +
+                    "</td><td>"
+                    + Discount +
+                    "</td><td>"
+                    + Total +
+                "</td><td><input type='button' value = 'Remove' name = 'remove' class='btn btn-danger' onclick='RemoveItem(this)' /></td></tr>";
+                   // "</td><td><button type='submit' class='btn btn-danger' id= 'RemoveItem'>Remove</button></td></tr>";
+
+                tblItem.append(ItemList);
+                calculateGT();
+                ResetItem();
+            }
+       
+            //$("#RemoveItem").click(function () {
+            //    $(this).parent().parent().remove();
+            //})
+            function RemoveItem(itemId){
+              $(itemId).closest('tr').remove();
+             }
+
+            function calculateGT() {
+                $("#GrandTotal").val("0.00");
+                var FinalTotal = 0.00;
+
+                $("#myTable").find("tr:gt(0)").each(function () {
+                    var Total = parseFloat($(this).find("td:eq(5)").text());
+                    FinalTotal += Total;
+
+                });
+
+                $("#GrandTotal").val(FinalTotal);
+                $("#txtPaymentTotal").val(FinalTotal);
+                $("#txtBalance").val(FinalTotal);
+
+            }
+            function calculatebalance(){
+                var paymentotal = $("#txtPaymentTotal").val();
+                var paymentamount = $("#txtPaymentAmount").val();
+                var returnamount = $("#txtReturn").val();;
+            var balancetotal = parseInt(paymentotal) - (parseInt(paymentamount) - parseInt(returnamount));
+                $("#txtBalance").val(balancetotal);
+
+                 // if (parseInt(balancetotal))== 0{
+                 //    $("#btnsave").removeAttr("disabled");
+                 // }
+                 //else {
+                      //  $("#btnsave").Attr("disabled", "disabled");
+                      //}
+            }
+
+            function ResetItem() {
+                $("#Price").val('');
+                $("#Quantity").val('');
+                $("#Discount").val('0');
+                $("#ItemId").val('');;
+                $("#Total").val('');
+
+            }
+
+    </script>
 
 }
